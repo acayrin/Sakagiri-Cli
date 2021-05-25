@@ -5,8 +5,13 @@ import prompt from 'prompt'
 prompt.message = chalk.red('HH ')
 prompt.delimiter = ''
 // Flat-file database
-import { resolve } from 'path'
-import { Low, JSONFile } from 'lowdb'
+import {
+    resolve
+} from 'path'
+import {
+    Low,
+    JSONFile
+} from 'lowdb'
 import * as Items from './lib/Scraper/Item.mjs'
 import * as Monsters from './lib/Scraper/Monster.mjs'
 import * as Maps from './lib/Scraper/Map.mjs'
@@ -35,9 +40,10 @@ const help = () => {
         '- command line interface to interact with Sakagiri database',
         '',
         'Commands',
-        '  minify [path]        --  generate a minified version of the database',
-        '  update               --  update main database with Coryn.club',
-        '  exit                 --  exit the program',
+        '  zip    [path]     --  generate a minified version of the database',
+        '  unzip  [path]     --  generate a normal version of minified data file',
+        '  update            --  update main database with Coryn.club',
+        '  exit              --  exit the program',
         ''.fillWith('_', process.stdout.columns) + '\n',
     ].join('\n'))
 }
@@ -60,62 +66,85 @@ const send = () => prompt.get(['>'], async (err, res) => {
 
     const cmd = arg.shift().toUpperCase()
     switch (cmd) {
-        // ===================================== MINIFY =====================================
-        case 'MINIFY': {
+        // ===================================== ZIP =====================================
+        case 'ZIP': {
             // create new db file
-            const version = `${Math.floor(Date.now() / 10000000) }`
+            const version = `${Math.floor(Date.now() * Math.random() / 1000000) }`
             const file = arg.shift() || `./Sakagiri-Minified-${version}.json`
-            const mini = new Low(new JSONFile(resolve(file)))
+            let zip = {}
 
-            // loop through all items
-            const total = []
-            let count = 0
-            await promise.map(db.data.index, i => {
-                const x = utils.zip(i)
-                // log
-                utils.log(`[1/3] Adding ${i.id.fillWith(' ', 5)} [~${(x.length / JSON.stringify(i).length * 100).toFixed(2)} %] (${(count++ / db.data.index.length * 100).toFixed(2)}% completed)\r`)
-                // write
-                total.push(x)
-            }, {
-                concurrency: 25
-            })
-
-            // compress end array into lz-string
-            utils.log(`[2/3] Compressing...\r`)
-            mini.data = {
-                version: version,
-                index: utils.zip(total),
-                colors: utils.zip(db.data.colors),
-                toram: utils.zip(db.data.toram)
-            }
-            await mini.write()
-
-            // validate that the values are the same
-            utils.log(`[3/3] Validating...\r`)
-
-            let matches = 0
-            await promise.map(utils.unzip(mini.data.index), i => {
-                // decompress the value
-                const a = utils.unzip(i)
-                // check if value exists
-                const e = db.data.index.find(f => f.id === a.id)
-                // check if value is the same
-                if (e && !utils.jsDiff(a, e)) {
-                    utils.log(`[3/3] [${(matches++).toString().fillWith(' ', 4, true)}/${db.data.index.length}] ${a.id.fillWith(' ', 5)} matched\r`)
+            for (const key of Object.keys(db.data)) {
+                utils.log(`[1/4] Zipping '${key}'...\r`)
+                if (db.data[key] instanceof Object || Array.isArray(db.data[key])) {
+                    zip[key] = utils.zip(db.data[key])
                 } else {
-                    utils.log(`[3/3] [${(matches++).toString().fillWith(' ', 4, true)}/${db.data.index.length}] ${a.id.fillWith(' ', 5)} mismatched`, 2)
-                    console.log(a)
-                    console.log(e)
+                    zip[key] = db.data[key]
                 }
-            }, {
-                concurrency: 25
-            })
+            }
 
-            // clean up
-            utils.log(`+ Completed minify to '${file}'`)
+            utils.log(`[2/4] Compressing...\r`)
+            zip = utils.zip(zip)
+
+            utils.log(`[3/4] Validating...\r`)
+            const de = utils.unzip(zip)
+            for (const key of Object.keys(de)) {
+                try {
+                    const dt = utils.unzip(de[key])
+                    if (Array.isArray(dt)) {
+                        for (const i of dt) {
+                            const f = db.data[key].indexOf(i)
+                            if (f !== -1) {
+                                utils.log(`'${key}:${dt.indexOf(i)}' not found`, 2)
+                            }
+                        }
+                    } else if (utils.jsDiff(db.data[key], dt)) {
+                        utils.log(`'${key}' mismatched`, 2)
+                    }
+                } catch (e) {
+                    if (utils.jsDiff(db.data[key], de[key])) {
+                        utils.log(`'${key}' mismatched`, 2)
+                    }
+                }
+            }
+
+            utils.log(`[4/4] Saving...\r`)
+            fs.writeFileSync(resolve(file), JSON.stringify(zip), 'utf8')
+            
+            utils.log(`Completed minifying to ${resolve(file)}`)
             break
         }
-        // ===================================== MINIFY ====================================
+        // ===================================== ZIP ====================================
+
+
+
+        // ===================================== UNZIP ====================================
+        case 'UNZIP': {
+            const file = arg.shift()
+            if (!file || !fs.existsSync(resolve(file))) {
+                utils.log(`No valid data file found`, 2)
+                break
+            }
+
+            const g = utils.unzip(JSON.parse(fs.readFileSync(resolve(file), 'utf-8')))
+            const j = {}
+            for (const key of Object.keys(g)) {
+                try {
+                    j[key] = utils.unzip(g[key])
+                } catch(e) {
+                    j[key] = g[key]
+                }
+            }
+
+            const e = resolve(file).split('.').slice(-1).pop()
+            const f = `${resolve(file)}-UNZIP${e ? `.${e}` : ''}`
+            const d = new Low(new JSONFile(f))
+            d.data = j
+            await d.write()
+
+            utils.log(`Completed unzipping to ${f}`)
+            break
+        }
+        // ===================================== UNZIP ====================================
 
 
 
