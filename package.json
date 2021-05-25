@@ -1,0 +1,29 @@
+{
+    "name": "kohri-database",
+    "version": "1.0.0",
+    "description": "kohri database",
+    "main": "index.mjs",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.mjs"
+    },
+    "keywords": [
+        "kohri",
+        "db"
+    ],
+    "author": "acayrin",
+    "license": "MIT",
+    "dependencies": {
+        "bluebird": "^3.7.2",
+        "chalk": "^4.1.1",
+        "eval": "^0.1.6",
+        "jquery": "^3.6.0",
+        "jsdom": "^16.5.3",
+        "jsonpack": "^1.1.5",
+        "lodash": "^4.17.21",
+        "lowdb": "^2.0.3",
+        "lz-string": "^1.4.4",
+        "node-fetch": "^2.6.1",
+        "prompt": "^1.1.0"
+    }
+}
