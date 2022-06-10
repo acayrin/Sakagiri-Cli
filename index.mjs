@@ -153,34 +153,43 @@ const send = () => prompt.get(['>'], async (err, res) => {
             const _n = Date.now()
             const a = []
             const l = []
-            for (let i = 1; i <= db.data.index.length + 30; i++) {
+            let i = 1;
+            while (i++ <= 10000) {
                 a.push(i)
             }
             utils.log(`Starting full database update (expect: ${a.length})`)
             await promise.map(a.sort(), async c => {
-                const i1 = await Items.exec(c)
-                const i2 = await Monsters.exec(c)
-                const i3 = await Maps.exec(c)
-                if (i1) {
-                    l.push(i1)
-                    utils.log(`Added ${i1.id} (${l.length})\r`)
-                }
-                if (i2) {
-                    l.push(i2)
-                    utils.log(`Added ${i2.id} (${l.length})\r`)
-                }
-                if (i3) {
-                    l.push(i3)
-                    utils.log(`Added ${i3.id} (${l.length})\r`)
+                try {
+                    const i1 = await Items.exec(c)
+                    const i2 = await Monsters.exec(c)
+                    const i3 = await Maps.exec(c)
+                    if (i1) {
+                        l.push(i1)
+                        utils.log(`Added ${i1.id} (${l.length})\r`)
+                    }
+                    if (i2) {
+                        l.push(i2)
+                        utils.log(`Added ${i2.id} (${l.length})\r`)
+                    }
+                    if (i3) {
+                        l.push(i3)
+                        utils.log(`Added ${i3.id} (${l.length})\r`)
+                    }
+                } catch (e) {
+                  utils.log(e);
                 }
             }, {
-                concurrency: 25
-            }).finally(async () => {
+                concurrency: 30,
+            })
+            .catch((e) => {
+                console.log(e)
+            })
+            .finally(async () => {
                 const version = `${Math.floor(Date.now() / 1000000) }`
                 db.data.version = version
                 db.data.index = l
                 await db.write()
-                utils.log(`Updated ${db.data.index} items, took ${utils.time_format((Date.now() - _n) / 1000)}`)
+                utils.log(`Updated ${db.data.index.length} items, took ${utils.time_format((Date.now() - _n) / 1000)}`)
                 await load()
             })
             break

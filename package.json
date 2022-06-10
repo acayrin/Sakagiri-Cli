@@ -14,15 +14,15 @@
     "author": "acayrin",
     "license": "MIT",
     "dependencies": {
-        "bluebird": "^3.7.2",
-        "chalk": "^4.1.1",
-        "eval": "^0.1.6",
-        "jquery": "^3.6.0",
-        "jsdom": "^16.5.3",
-        "jsonpack": "^1.1.5",
-        "lowdb": "^2.0.3",
-        "lz-string": "^1.4.4",
-        "node-fetch": "^2.6.1",
-        "prompt": "^1.1.0"
+        "bluebird": "3.7.2",
+        "chalk": "4.1.1",
+        "eval": "0.1.6",
+        "jquery": "3.6.0",
+        "jsdom": "16.5.3",
+        "jsonpack": "1.1.5",
+        "lowdb": "2.0.3",
+        "lz-string": "1.4.4",
+        "node-fetch": "2.6.1",
+        "prompt": "1.1.0"
     }
 }
