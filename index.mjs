@@ -69,7 +69,7 @@ const send = () => prompt.get(['>'], async (err, res) => {
         // ===================================== ZIP =====================================
         case 'ZIP': {
             // create new db file
-            const version = `${Math.floor(Date.now() * Math.random() / 1000000) }`
+            const version = `${Math.floor(Date.now() * Math.random() / 1000000)}`
             const file = arg.shift() || `./Sakagiri-Minified-${version}.json`
             let zip = {}
 
@@ -109,7 +109,7 @@ const send = () => prompt.get(['>'], async (err, res) => {
 
             utils.log(`[4/4] Saving...\r`)
             fs.writeFileSync(resolve(file), JSON.stringify(zip), 'utf8')
-            
+
             utils.log(`Completed minifying to ${resolve(file)}`)
             break
         }
@@ -130,7 +130,7 @@ const send = () => prompt.get(['>'], async (err, res) => {
             for (const key of Object.keys(g)) {
                 try {
                     j[key] = utils.unzip(g[key])
-                } catch(e) {
+                } catch (e) {
                     j[key] = g[key]
                 }
             }
@@ -154,7 +154,7 @@ const send = () => prompt.get(['>'], async (err, res) => {
             const a = []
             const l = []
             let i = 1;
-            while (i++ <= 10000) {
+            while (i++ <= db.data.index.length + 30) {
                 a.push(i)
             }
             utils.log(`Starting full database update (expect: ${a.length})`)
@@ -176,22 +176,22 @@ const send = () => prompt.get(['>'], async (err, res) => {
                         utils.log(`Added ${i3.id} (${l.length})\r`)
                     }
                 } catch (e) {
-                  utils.log(e);
+                    utils.log(e);
                 }
             }, {
                 concurrency: 30,
             })
-            .catch((e) => {
-                console.log(e)
-            })
-            .finally(async () => {
-                const version = `${Math.floor(Date.now() / 1000000) }`
-                db.data.version = version
-                db.data.index = l
-                await db.write()
-                utils.log(`Updated ${db.data.index.length} items, took ${utils.time_format((Date.now() - _n) / 1000)}`)
-                await load()
-            })
+                .catch((e) => {
+                    console.log(e)
+                })
+                .finally(async () => {
+                    const version = `${Math.floor(Date.now() / 1000000)}`
+                    db.data.version = version
+                    db.data.index = l
+                    await db.write()
+                    utils.log(`Updated ${db.data.index.length} items, took ${utils.time_format((Date.now() - _n) / 1000)}`)
+                    await load()
+                })
             break
         }
         // ===================================== UPDATE =====================================
@@ -210,7 +210,7 @@ const send = () => prompt.get(['>'], async (err, res) => {
         // ===================================== Default =====================================
         default:
             help()
-            // ===================================== Default =====================================
+        // ===================================== Default =====================================
     }
 
     // start over
