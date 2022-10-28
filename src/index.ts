@@ -79,7 +79,7 @@ const send = (): void =>
 			// ===================================== UPDATE =====================================
 			case 'UPDATE': {
 				const _n = Date.now();
-				const size = (db.data as L).index.length
+				const _i = (db.data as L).index
 				db.data = {
 					index: [],
 					version: -1,
@@ -95,12 +95,13 @@ const send = (): void =>
 				};
 				const _int = setInterval(() => {
 					utils.log(
-						`Updating data... I:${workers_completed.w_items} | E:${workers_completed.w_monsters} | M:${workers_completed.w_maps}`,
+						`Updating data... T:${workers_completed.w_items} | E:${workers_completed.w_monsters} | M:${workers_completed.w_maps}`,
 						1
 					);
 				}, 30e3);
 
-				utils.log(`Updating from ${size} previous entries`, 1)
+				utils.log(`Updating ${_i.length} previous entries`, 1)
+				const seen: any = {}
 
 				await new Promise((resolve, _) => {
 					for (let i = 1; i <= 3; i++) {
@@ -108,7 +109,10 @@ const send = (): void =>
 						worker.postMessage(
 							JSON.stringify({
 								code: i,
-								size: size
+								size: 
+									i === 1 ? _i.filter(e => e.id.startsWith("T")).length :
+									i === 2 ? _i.filter(e => e.id.startsWith("E")).length :
+									_i.filter(e => e.id.startsWith("M")).length
 							})
 						);
 						worker.on('message', (msg) => {
@@ -125,16 +129,22 @@ const send = (): void =>
 									(db.data as L).index.length
 								switch (i) {
 									case 1:
-										(db.data as L).index.push(result.data as Item);
-										_msg += `#${(db.data as L).index.length}`;
+										if (seen[result.data.id] === undefined) {
+											(db.data as L).index.push(result.data as Item);
+											_msg += `#${(db.data as L).index.length}`;
+										}
 										break;
 									case 2:
-										(db.data as L).index.push(result.data as Monster);
-										_msg += `#${(db.data as L).index.length}`;
+										if (seen[result.data.id] === undefined) {
+											(db.data as L).index.push(result.data as Monster);
+											_msg += `#${(db.data as L).index.length}`;
+										}
 										break;
 									case 3:
-										(db.data as L).index.push(result.data as Map);
-										_msg += `#${(db.data as L).index.length}`;
+										if (seen[result.data.id] === undefined) {
+											(db.data as L).index.push(result.data as Map);
+											_msg += `#${(db.data as L).index.length}`;
+										}
 										break;
 								}
 								utils.log(_msg + ` / ${_total} - Added ${result.data.id} - ${result.data.name}\r`, 1);
